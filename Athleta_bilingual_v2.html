@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Athleta — 영한 대조 (양방향 하이라이트)</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Georgia, serif; font-size: 14px; line-height: 1.75; background: #f5f5f5; color: #222; }
+
+header { background: #1a1a2e; color: #eee; padding: 14px 32px; display: flex; align-items: baseline; gap: 20px; }
+header h1 { font-size: 18px; }
+header .sub { font-size: 11px; color: #999; }
+
+.help-bar { background: #2d2d44; color: #aaa; font-size: 11px; padding: 5px 32px; display: flex; gap: 24px; flex-wrap: wrap; }
+.help-bar kbd { background: #444; color: #eee; padding: 1px 6px; border-radius: 3px; font-family: monospace; font-size: 10px; }
+
+.lang-bar { display: grid; grid-template-columns: 1fr 1fr; background: #2d2d44; border-bottom: 2px solid #555; }
+.lang-bar div { padding: 5px 32px; font-size: 11px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; color: #aaa; }
+.lang-bar .kr { border-left: 1px solid #444; }
+
+.section-divider { background: #e8e8f0; padding: 7px 28px; font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: #666; border-bottom: 1px solid #ddd; }
+
+.container { max-width: 1500px; margin: 0 auto; }
+
+.bi-row { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid #ddd; }
+.cell { padding: 20px 28px; }
+.cell.en { background: #fff; border-right: 1px solid #ddd; }
+.cell.kr { background: #f8f8fc; }
+.cell.full { grid-column: 1 / -1; background: #f0f0f8; text-align: center; padding: 24px 32px; }
+
+.cell h2 { font-size: 13px; font-weight: bold; color: #1a1a2e; margin-bottom: 12px; padding-bottom: 5px; border-bottom: 2px solid #1a1a2e; text-transform: uppercase; letter-spacing: 0.5px; }
+.cell h3 { font-size: 12px; font-weight: bold; color: #444; margin: 14px 0 6px; }
+.cell p { margin-bottom: 10px; }
+.cell blockquote { margin: 10px 0; padding: 8px 14px; border-left: 3px solid #888; color: #555; font-style: italic; background: rgba(0,0,0,0.03); font-size: 13px; }
+
+.cell table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 10px 0; }
+.cell th { background: #1a1a2e; color: #fff; padding: 5px 8px; text-align: left; font-weight: normal; font-size: 11px; }
+.cell td { padding: 5px 8px; border-bottom: 1px solid #e8e8e8; vertical-align: top; }
+.cell tr:nth-child(even) td { background: #f4f4f8; }
+.cell tr.total td { font-weight: bold; border-top: 2px solid #1a1a2e; background: #eeeef5; }
+.cell .note { font-size: 11px; color: #888; margin-top: 4px; }
+
+.cell.full img { max-width: 100%; max-height: 620px; height: auto; border: 1px solid #ccc; }
+.cell.full .img-cap { font-size: 11px; color: #888; margin-top: 8px; }
+.cell.full h2 { text-align: left; }
+
+/* ── Highlight states ── */
+.sent { cursor: pointer; border-radius: 2px; transition: background 0.1s; }
+.term { cursor: pointer; border-radius: 2px; transition: background 0.1s; border-bottom: 1px dotted #888; }
+.sent.h-on, .term.h-on { background: rgba(255, 215, 0, 0.38); }
+.sent.on, .term.on { background: rgba(60, 130, 255, 0.22); outline: 1px solid rgba(60,130,255,0.4); }
+.sent.h-on.on, .term.h-on.on { background: rgba(255, 150, 0, 0.35); }
+
+/* ── Tooltip ── */
+#tip { position: fixed; display: none; z-index: 9999; max-width: 340px; background: #1a1a2e; color: #eee; border-radius: 6px; padding: 12px 16px; font-size: 12px; line-height: 1.55; box-shadow: 0 4px 20px rgba(0,0,0,0.4); pointer-events: none; }
+#tip .t-title { font-size: 13px; font-weight: bold; color: #ffd700; margin-bottom: 7px; padding-bottom: 5px; border-bottom: 1px solid #444; }
+#tip .t-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: #888; margin: 6px 0 2px; }
+#tip .t-common { color: #ddd; }
+#tip .t-vc { color: #7ec8ff; }
+
+/* ── Vocab panel ── */
+.vocab-panel { padding: 16px 28px; background: #f0f0f8; border-bottom: 1px solid #ddd; }
+.vocab-panel > h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #777; margin-bottom: 12px; }
+.vgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 8px; }
+.vcard { background: #fff; border: 1px solid #ddd; border-radius: 4px; padding: 9px 12px; font-size: 12px; }
+.vcard .vt { font-weight: bold; color: #1a1a2e; font-size: 13px; }
+.vcard .vkr { color: #666; font-size: 11px; margin-bottom: 5px; }
+.vcard .vc1 { color: #444; margin-bottom: 4px; }
+.vcard .vc2 { color: #1a5fa8; border-top: 1px solid #eee; padding-top: 5px; margin-top: 4px; }
+.badge { display: inline-block; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; padding: 1px 5px; border-radius: 3px; margin-right: 4px; vertical-align: middle; }
+.bg { background: #e0e0e0; color: #555; }
+.bv { background: #1a5fa8; color: #fff; }
+
+/* ── Clear button ── */
+#clear-btn { position: fixed; bottom: 20px; right: 20px; background: #1a1a2e; color: #eee; border: none; border-radius: 4px; padding: 7px 14px; font-size: 11px; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.3); z-index: 500; }
+#clear-btn:hover { background: #2d2d44; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Athleta — HBS 9-803-045</h1>
+  <span class="sub">Sahlman &amp; Friedman-Harris | Rev. July 30, 2003 &nbsp;|&nbsp; 영한 대조 양방향 하이라이트</span>
+</header>
+
+<div class="help-bar">
+  <span><kbd>hover</kbd> 단어/문장 → 반대쪽도 노란색 하이라이트</span>
+  <span><kbd>click</kbd> 파란색으로 고정 선택</span>
+  <span><kbd>click again</kbd> 해제</span>
+  <span><kbd>Esc</kbd> 전체 해제</span>
+  <span><kbd>점선 밑줄</kbd> VC 용어 — hover 시 해설 팝업</span>
+</div>
+
+<div class="lang-bar">
+  <div>English (Original)</div>
+  <div class="kr">한국어 번역 (Korean)</div>
+</div>
+
+<div class="container">
+
+<!-- ═══════════════════════════════ INTRO ═══════════════════════════════ -->
+<div class="section-divider">Introduction / 도입</div>
+<div class="bi-row">
+  <div class="cell en">
+    <h2>Introduction</h2>
+    <blockquote>
+      <span class="sent" data-sid="q1">"The defining characteristic of an entrepreneur is that we can talk ourselves into almost anything."</span>
+      <span class="sent" data-sid="q2"> — Scott Kerslake, President &amp; CEO, Athleta</span>
+    </blockquote>
+    <p>
+      <span class="sent" data-sid="s2">On the morning of March 26, 2002, Scott Kerslake—president and CEO of Athleta—reflected on the unfamiliar sounds of the city while stuck in a Manhattan traffic jam.</span>
+      <span class="sent" data-sid="s3"> In contrast, several employees at the Athleta headquarters in Petaluma, California, were preparing to run in the open space near the office or take their dogs for a walk.</span>
+    </p>
+    <p>
+      <span class="sent" data-sid="s4">Kerslake and Joe Teno—Athleta's senior vice president of operations—were on a trip to New York City in the hopes of securing the remaining <span class="term" data-tid="t-series-e">Series E</span> round of financing from investors who understood and appreciated Athleta's business model and culture.</span>
+      <span class="sent" data-sid="s5"> Athleta had less than $750,000 in cash remaining.</span>
+      <span class="sent" data-sid="s6"> It was essential that they secure the additional capital to fund further growth.</span>
+    </p>
+    <p>
+      <span class="sent" data-sid="s7">In 1999, Kerslake founded Athleta as a "women's sports company" selling a wide range of women's multi-sport apparel through a <span class="term" data-tid="t-multichannel">multi-channel</span> platform that included catalog, online, and retail.</span>
+      <span class="sent" data-sid="s8"> Between 1998 and the end of 2002, Athleta expected to have fulfilled over 400,000 orders and generated over $55 million in revenue—all with less than $5 million in <span class="term" data-tid="t-equity">equity capital</span>.</span>
+    </p>
+  </div>
+  <div class="cell kr">
+    <h2>도입</h2>
+    <blockquote>
+      <span class="sent" data-sid="q1">"기업가의 가장 두드러진 특성은, 우리가 거의 모든 것을 스스로에게 납득시킬 수 있다는 것이다."</span>
+      <span class="sent" data-sid="q2"> — Scott Kerslake, Athleta 사장 겸 CEO</span>
+    </blockquote>
+    <p>
+      <span class="sent" data-sid="s2">2002년 3월 26일 아침, Athleta의 사장 겸 CEO Scott Kerslake는 맨해튼 교통 정체 속에서 낯선 도시의 소음을 들으며 생각에 잠겼다.</span>
+      <span class="sent" data-sid="s3"> 그 시각 캘리포니아주 페탈루마 본사에서는 직원들이 사무실 인근 공원으로 달리기를 나가거나 반려견 산책을 준비하고 있었다.</span>
+    </p>
+    <p>
+      <span class="sent" data-sid="s4">Kerslake와 수석 부사장 Joe Teno는 자사의 비즈니스 모델과 기업 문화를 이해하고 공감해 줄 투자자로부터 <span class="term" data-tid="t-series-e">시리즈 E(Series E)</span> 자금을 확보하기 위해 뉴욕을 방문 중이었다.</span>
+      <span class="sent" data-sid="s5"> 잔여 현금은 75만 달러 미만이었으며,</span>
+      <span class="sent" data-sid="s6"> 추가 자본 확보가 절실한 상황이었다.</span>
+    </p>
+    <p>
+      <span class="sent" data-sid="s7">1999년 Kerslake는 카탈로그·온라인·오프라인 매장을 포괄하는 <span class="term" data-tid="t-multichannel">멀티채널(Multi-channel)</span> 플랫폼을 통해 여성 다목적 스포츠 의류를 판매하는 회사로 Athleta를 창립했다.</span>
+      <span class="sent" data-sid="s8"> 1998년부터 2002년 말까지 500만 달러 미만의 <span class="term" data-tid="t-equity">자기자본(Equity Capital)</span>으로 40만 건 이상의 주문 처리와 5,500만 달러 이상의 매출을 달성할 것으로 예상했다.</span>
+    </p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ TABLE C ═══════════════════════════════ -->
+<div class="section-divider">Series E Financing Requirements / 자금 조달 내역</div>
+<div class="bi-row">
+  <div class="cell en">
+    <h2>Table C: Athleta Financing Requirements</h2>
+    <table>
+      <tr><th>Area</th><th>Purpose of Proceeds</th><th>$M</th></tr>
+      <tr><td><span class="term" data-tid="t-circulation">Catalog Circulation</span> Growth</td><td>Scale mailings to 6M/year</td><td>$1.48</td></tr>
+      <tr><td>Supplier <span class="term" data-tid="t-working-capital">Terms</span> Improvement</td><td>Eliminate prepayment requirements</td><td>$0.68</td></tr>
+      <tr><td>Infrastructure / <span class="term" data-tid="t-distribution">Distribution Center</span></td><td>MIS &amp; dist. center upgrade</td><td>$0.58</td></tr>
+      <tr><td>Human Resources</td><td>Key hires</td><td>$0.22</td></tr>
+      <tr><td><span class="term" data-tid="t-private-label">Private-Label</span> / Store / Marketing</td><td>Brand expansion &amp; marketing</td><td>$0.47</td></tr>
+      <tr class="total"><td>Total</td><td></td><td>$3.43</td></tr>
+    </table>
+    <p class="note">Source: Company documents.</p>
+  </div>
+  <div class="cell kr">
+    <h2>Table C: Athleta 자금 조달 내역</h2>
+    <table>
+      <tr><th>항목</th><th>자금 용도</th><th>$M</th></tr>
+      <tr><td><span class="term" data-tid="t-circulation">카탈로그 발행(Catalog Circulation)</span> 확대</td><td>연간 600만부로 확대</td><td>$1.48</td></tr>
+      <tr><td>공급업체 결제 <span class="term" data-tid="t-working-capital">조건(Terms)</span> 개선</td><td>선급 결제 의무 해소</td><td>$0.68</td></tr>
+      <tr><td>인프라 / <span class="term" data-tid="t-distribution">물류센터(Distribution Center)</span></td><td>MIS 및 물류센터 업그레이드</td><td>$0.58</td></tr>
+      <tr><td>인적 자원</td><td>핵심 인력 채용</td><td>$0.22</td></tr>
+      <tr><td><span class="term" data-tid="t-private-label">자체 브랜드(Private-Label)</span> / 매장 / 마케팅</td><td>브랜드 확장 및 마케팅</td><td>$0.47</td></tr>
+      <tr class="total"><td>합계</td><td></td><td>$3.43</td></tr>
+    </table>
+    <p class="note">출처: 회사 자료</p>
+  </div>
+</div>
+
+<!-- Table C vocab panel -->
+<div class="vocab-panel">
+  <h3>Table C — 주요 용어 해설</h3>
+  <div class="vgrid">
+    <div class="vcard">
+      <div class="vt">Series E <span style="font-weight:normal;font-size:11px;color:#888">/ 시리즈 E</span></div>
+      <div class="vkr">다섯 번째 우선주 투자 라운드</div>
+      <div class="vc1"><span class="badge bg">일반</span>A→B→C→D→E 순서의 다섯 번째 펀딩 라운드</div>
+      <div class="vc2"><span class="badge bv">VC</span>후기 성장 단계 자금 조달. 각 라운드마다 밸류에이션 상승·지분 희석(Dilution) 누적. 후기 라운드일수록 Term Sheet 조건 복잡화 — 청산 우선권 배수, 참여 우선주(Participating Preferred) 등.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Equity Capital <span style="font-weight:normal;font-size:11px;color:#888">/ 자기자본</span></div>
+      <div class="vkr">주식 발행으로 조달한 자본, 상환 의무 없음</div>
+      <div class="vc1"><span class="badge bg">일반</span>부채(Debt)와 달리 이자·원금 상환 의무 없는 자본</div>
+      <div class="vc2"><span class="badge bv">VC</span>VC 투자는 일반적으로 우선주(Preferred Stock)로 집행. 청산 우선권(Liquidation Preference), 반희석 조항(Anti-dilution), 이사회 참여권(Board Seat) 등 특별 권리 수반. 창업자·임직원은 보통주(Common Stock) 보유.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Catalog Circulation <span style="font-weight:normal;font-size:11px;color:#888">/ 카탈로그 발행 부수</span></div>
+      <div class="vkr">인쇄·배포되는 카탈로그 총 부수</div>
+      <div class="vc1"><span class="badge bg">일반</span>잡지·카탈로그 등의 총 배포 수량</div>
+      <div class="vc2"><span class="badge bv">VC</span>고객 획득 비용(CAC)의 핵심 결정 요인. 단위 ROI = Response Rate × AOV ÷ 카탈로그 단가. Athleta 응답률 6.4% vs 업계 평균 2% → 발행 부수 확대 시 기대 ROI 높음. VC는 이를 마케팅 투자 효율성 지표로 평가.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Supplier Terms <span style="font-weight:normal;font-size:11px;color:#888">/ 공급업체 결제 조건</span></div>
+      <div class="vkr">물품 대금 지급 시기·방식에 관한 계약 조건</div>
+      <div class="vc1"><span class="badge bg">일반</span>Net 30 = 납품 후 30일 내 지급. 선급(Prepayment) = 납품 전 지급.</div>
+      <div class="vc2"><span class="badge bv">VC</span>선급 조건은 운전자본(Working Capital)을 잠식 → 현금 전환 주기(Cash Conversion Cycle) 악화. 자금이 충분해지면 Net 30~60 조건 협상 → 현금 효율 개선. VC는 공급망 협상력을 비즈니스 성숙도 지표로 봄.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Private-Label Brand <span style="font-weight:normal;font-size:11px;color:#888">/ 자체 브랜드</span></div>
+      <div class="vkr">소매업체가 직접 기획·제조하는 PB 상품</div>
+      <div class="vc1"><span class="badge bg">일반</span>OEM/ODM 방식의 자체 브랜드 상품</div>
+      <div class="vc2"><span class="badge bv">VC</span>외부 브랜드 의존도 축소 → 공급망 협상력 강화 → Gross Margin 개선(일반 +5~15%p). 브랜드 자산(Brand Equity) 구축. VC는 자체 브랜드 매출 비중을 마진 개선 레버(Margin Lever)로 평가.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Distribution Center <span style="font-weight:normal;font-size:11px;color:#888">/ 물류센터</span></div>
+      <div class="vkr">상품 보관·포장·배송을 처리하는 시설</div>
+      <div class="vc1"><span class="badge bg">일반</span>창고 기능 + 주문 처리(Order Fulfillment) 기능</div>
+      <div class="vc2"><span class="badge bv">VC</span>운영 레버리지(Operating Leverage)의 핵심 인프라. 고정비 성격 강함 → 매출 증가 시 단위 비용 감소. 인프라 선투자는 향후 3~5년 성장 용량(Capacity) 확보 의미. VC는 CapEx 대비 기대 매출 증분(ROI)으로 판단.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ EXHIBIT 3 ═══════════════════════════════ -->
+<div class="section-divider">Exhibit 3: Historical Financials / 과거 재무제표</div>
+<div class="bi-row">
+  <div class="cell full">
+    <h2>Exhibit 3: Income Statement (손익계산서) — Athleta Historical Financials</h2>
+    <img src="Captures/Screenshot 2026-03-17 162905.png" alt="Exhibit 3 Income Statement">
+    <p class="img-cap">Source: Company documents.</p>
+  </div>
+</div>
+
+<!-- Exhibit 3 vocab panel -->
+<div class="vocab-panel">
+  <h3>손익계산서 (Income Statement) — 주요 용어 해설</h3>
+  <div class="vgrid">
+    <div class="vcard">
+      <div class="vt">Net Sales <span style="font-weight:normal;font-size:11px;color:#888">/ 순매출액</span></div>
+      <div class="vkr">총매출 − 반품 − 할인 = 실제 인식 매출</div>
+      <div class="vc1"><span class="badge bg">일반</span>Gross Sales에서 반품(Returns)·할인(Discounts) 차감</div>
+      <div class="vc2"><span class="badge bv">VC</span>성장성 평가의 핵심 KPI. Athleta: $1.4M(FY99)→$7.7M(FY00)→$14.3M(FY01). YoY ~85% 성장은 VC 기준 매력적. 그러나 수익성(Path to Profitability) 경로가 불분명하면 2002년 시장에서 투자 유치 난항.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Cost of Goods Sold (COGS) <span style="font-weight:normal;font-size:11px;color:#888">/ 매출원가</span></div>
+      <div class="vkr">판매된 상품의 직접 원가</div>
+      <div class="vc1"><span class="badge bg">일반</span>상품 제조·구매에 직접 소요된 비용</div>
+      <div class="vc2"><span class="badge bv">VC</span>Gross Margin = (Net Sales − COGS) / Net Sales. Athleta ~43%는 소매업(30~45%) 기준 양호. SaaS(70~85%) 대비 낮지만, Private-Label 확장 시 개선 여지. VC는 Gross Margin의 확장 가능성(Scalability)을 중시.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Gross Profit <span style="font-weight:normal;font-size:11px;color:#888">/ 매출총이익</span></div>
+      <div class="vkr">Net Sales − COGS</div>
+      <div class="vc1"><span class="badge bg">일반</span>매출에서 원가를 뺀 첫 단계의 이익</div>
+      <div class="vc2"><span class="badge bv">VC</span>단위경제성(Unit Economics)의 첫 관문. Gross Profit이 영업비용(OpEx)을 커버해야 수익성 달성 가능. Gross Margin이 낮으면 아무리 매출이 커도 흑자 전환이 어려움 — 소매업 VC 투자 기피 이유.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Operating Income (EBIT) <span style="font-weight:normal;font-size:11px;color:#888">/ 영업이익</span></div>
+      <div class="vkr">Gross Profit − Operating Expenses</div>
+      <div class="vc1"><span class="badge bg">일반</span>이자·세금 차감 전 영업 활동 이익 (Earnings Before Interest &amp; Taxes)</div>
+      <div class="vc2"><span class="badge bv">VC</span>수익성 경로(Path to Profitability)의 핵심 지표. Athleta FY99~FY01 지속 적자. VC는 Break-even Revenue(손익분기 매출)가 실현 가능한 규모인지, 흑자 전환 시점의 시장 지배력이 충분한지를 판단.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Marketing Expense <span style="font-weight:normal;font-size:11px;color:#888">/ 마케팅 비용</span></div>
+      <div class="vkr">카탈로그 인쇄·배송·광고 비용</div>
+      <div class="vc1"><span class="badge bg">일반</span>제품 홍보 및 고객 유치를 위한 비용</div>
+      <div class="vc2"><span class="badge bv">VC</span>카탈로그 비즈니스에서 매출 대비 마케팅 비용 비중(~29%)이 영업 적자의 주요 원인. VC는 매출 성장에 따라 이 비중이 감소하는지(Operating Leverage) 판단 — 즉, 규모의 경제가 마케팅 비용에 적용되는지 확인.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Fulfillment Expense <span style="font-weight:normal;font-size:11px;color:#888">/ 주문 처리 비용</span></div>
+      <div class="vkr">주문 수령·포장·배송 비용</div>
+      <div class="vc1"><span class="badge bg">일반</span>창고·포장·배송 인건비 및 재료비</div>
+      <div class="vc2"><span class="badge bv">VC</span>주문 건수에 비례하는 변동비. 규모의 경제(Economies of Scale) 달성 시 단위 비용 감소. 물류센터 MIS 업그레이드는 Fulfillment 효율화를 위한 투자 — VC는 이를 향후 마진 개선의 근거로 봄.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Retained Earnings (Deficit) <span style="font-weight:normal;font-size:11px;color:#888">/ 누적 결손금</span></div>
+      <div class="vkr">설립 이후 발생한 순손익의 누적액 (적자 시 음수)</div>
+      <div class="vc1"><span class="badge bg">일반</span>매년 당기순이익(손실)이 더해지는 누적 잔액</div>
+      <div class="vc2"><span class="badge bv">VC</span>Athleta 누적 결손금 ~$3.41M(FY2001). VC는 결손금 자체보다 발생 구조를 중시. 성장 투자(마케팅·인프라)에서 비롯된 결손은 용인, 구조적 비효율에서 비롯된 결손은 경고 신호. 흑자 전환 타임라인과 함께 해석.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Depreciation &amp; Amortization <span style="font-weight:normal;font-size:11px;color:#888">/ 감가상각</span></div>
+      <div class="vkr">유형·무형 자산 가치의 기간별 비용 인식</div>
+      <div class="vc1"><span class="badge bg">일반</span>자산의 가치 소모분을 회계상 비용으로 처리</div>
+      <div class="vc2"><span class="badge bv">VC</span>비현금 비용(Non-cash Expense)이므로 EBITDA = EBIT + D&A에서 제외. VC가 EBITDA를 선호하는 이유 — 실제 현금 창출 능력(Cash Generation) 반영. 밸류에이션 시 EV/EBITDA 배수 사용. 소매업에서 D&A는 상대적으로 낮음.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ EXHIBIT 3 Balance Sheet ═══════════════════════════════ -->
+<div class="bi-row">
+  <div class="cell full">
+    <h2>Exhibit 3: Balance Sheet (대차대조표)</h2>
+    <img src="Captures/Screenshot 2026-03-17 162924.png" alt="Exhibit 3 Balance Sheet">
+    <p class="img-cap">Source: Company documents.</p>
+  </div>
+</div>
+
+<div class="vocab-panel">
+  <h3>대차대조표 (Balance Sheet) — 주요 용어 해설</h3>
+  <div class="vgrid">
+    <div class="vcard">
+      <div class="vt">Current Assets <span style="font-weight:normal;font-size:11px;color:#888">/ 유동자산</span></div>
+      <div class="vkr">1년 내 현금화 가능한 자산</div>
+      <div class="vc1"><span class="badge bg">일반</span>현금·매출채권·재고자산 등 단기 자산</div>
+      <div class="vc2"><span class="badge bv">VC</span>유동자산 − 유동부채 = 운전자본(Working Capital). 카탈로그 비즈니스에서는 Prepaid Catalog(선급 카탈로그 비용)가 유동자산에 포함 — 발행 시점과 매출 인식 시점 간 시차 반영.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Inventories <span style="font-weight:normal;font-size:11px;color:#888">/ 재고자산</span></div>
+      <div class="vkr">판매를 위해 보유 중인 상품</div>
+      <div class="vc1"><span class="badge bg">일반</span>창고에 보관 중인 판매 가능 재고</div>
+      <div class="vc2"><span class="badge bv">VC</span>재고 회전율(Inventory Turnover = COGS ÷ 평균 재고)은 운영 효율성 지표. 재고 과다는 Working Capital 잠식. 시즌성 스포츠 의류는 재고 리스크(Markdown Risk) 존재 — VC는 재고 관리 능력을 운영 리스크 평가 지표로 사용.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Shareholders' Equity <span style="font-weight:normal;font-size:11px;color:#888">/ 주주자본</span></div>
+      <div class="vkr">총자산 − 총부채 = 주주 소유 순자산</div>
+      <div class="vc1"><span class="badge bg">일반</span>회사 청산 시 주주에게 귀속되는 자산의 회계적 가치</div>
+      <div class="vc2"><span class="badge bv">VC</span>Series A~D 우선주(Series A~D Preferred)와 보통주(Common Stock)로 구성. 각 시리즈의 청산 우선권(Liquidation Preference) 순서가 중요 — 청산 시 Series D → C → B → A → Common 순으로 분배. VC Term Sheet의 핵심 협상 항목.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Accounts Payable <span style="font-weight:normal;font-size:11px;color:#888">/ 매입채무</span></div>
+      <div class="vkr">공급업체에 아직 지급하지 않은 미지급금</div>
+      <div class="vc1"><span class="badge bg">일반</span>상품·서비스를 납품받았으나 아직 대금을 지급하지 않은 금액</div>
+      <div class="vc2"><span class="badge bv">VC</span>공급업체 결제 조건(Net 30~60) 개선 시 AP 증가 → Working Capital 개선. Athleta는 일부 공급업체에 선급 조건이 있어 AP가 낮고 현금 효율이 저하된 상태 — Series E 자금 용도 중 하나가 이 조건 개선.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ EXHIBIT 3 Cash Flow ═══════════════════════════════ -->
+<div class="bi-row">
+  <div class="cell full">
+    <h2>Exhibit 3: Statement of Cash Flows (현금흐름표)</h2>
+    <img src="Captures/Screenshot 2026-03-17 162935.png" alt="Exhibit 3 Cash Flow">
+    <p class="img-cap">Source: Company documents.</p>
+  </div>
+</div>
+
+<div class="vocab-panel">
+  <h3>현금흐름표 (Cash Flow Statement) — 주요 용어 해설</h3>
+  <div class="vgrid">
+    <div class="vcard">
+      <div class="vt">Operating Activities <span style="font-weight:normal;font-size:11px;color:#888">/ 영업활동 현금흐름</span></div>
+      <div class="vkr">핵심 사업 운영에서 발생한 현금 유입·유출</div>
+      <div class="vc1"><span class="badge bg">일반</span>제품 판매·비용 지급 등 일상적 영업 활동의 현금 흐름</div>
+      <div class="vc2"><span class="badge bv">VC</span>영업활동 현금흐름이 (+)로 전환되는 시점이 사업 지속 가능성(Viability)의 핵심 지표. Net Income 적자여도 D&A 환입 등으로 OCF는 플러스일 수 있음. VC는 OCF와 Net Income의 괴리를 분석해 수익의 질(Quality of Earnings) 판단.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Proceeds from Issuance of Equity <span style="font-weight:normal;font-size:11px;color:#888">/ 주식 발행 조달금</span></div>
+      <div class="vkr">신주 발행으로 투자자로부터 조달한 현금</div>
+      <div class="vc1"><span class="badge bg">일반</span>유상증자·VC 투자 등 주식 발행 대가로 받은 금액</div>
+      <div class="vc2"><span class="badge bv">VC</span>재무활동 현금흐름(Financing Activities)의 핵심 항목. Athleta의 경우 Series A~D 투자금이 여기에 기록됨. VC는 매 라운드 조달 금액과 소진 속도(Burn Rate)를 비교해 Runway(자금 소진까지 남은 기간) 계산.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Cash and Equivalents <span style="font-weight:normal;font-size:11px;color:#888">/ 현금 및 현금성 자산</span></div>
+      <div class="vkr">즉시 사용 가능한 현금 및 단기 유동 자산</div>
+      <div class="vc1"><span class="badge bg">일반</span>은행 잔고, MMF 등 즉시 현금화 가능한 자산</div>
+      <div class="vc2"><span class="badge bv">VC</span>Runway = 현금 잔고 ÷ 월간 Burn Rate. Athleta의 현금 잔고 $750K 미만 → Series E 조달 없이는 수개월 내 고갈. VC는 투자 결정 시 현재 Runway가 다음 마일스톤 달성에 충분한지 검토.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Burn Rate <span style="font-weight:normal;font-size:11px;color:#888">/ 번 레이트 (현금 소진 속도)</span></div>
+      <div class="vkr">월간 순 현금 지출액</div>
+      <div class="vc1"><span class="badge bg">일반</span>수입보다 지출이 많을 때, 매달 줄어드는 현금의 양</div>
+      <div class="vc2"><span class="badge bv">VC</span>Gross Burn = 월 총지출, Net Burn = 월 총지출 − 월 수입. Runway = 현금 잔고 ÷ Net Burn. VC 투자 검토의 시급성 판단 기준. Athleta처럼 Runway가 짧으면 협상력 약화 → 투자자에게 불리한 조건 수용 위험.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ EXHIBIT 4 ═══════════════════════════════ -->
+<div class="section-divider">Exhibit 4: Financial Projections / 재무 예측</div>
+<div class="bi-row">
+  <div class="cell full">
+    <h2>Exhibit 4: Projected Income Statement (예상 손익계산서)</h2>
+    <img src="Captures/Screenshot 2026-03-17 163026.png" alt="Exhibit 4 Projected Income Statement">
+    <p class="img-cap">Source: Company documents.</p>
+  </div>
+</div>
+<div class="bi-row">
+  <div class="cell full">
+    <h2>Exhibit 4: Projected Balance Sheet (예상 대차대조표)</h2>
+    <img src="Captures/Screenshot 2026-03-17 163110.png" alt="Exhibit 4 Projected Balance Sheet">
+    <p class="img-cap">Source: Company documents.</p>
+  </div>
+</div>
+<div class="bi-row">
+  <div class="cell full">
+    <h2>Exhibit 4: Projected Balance Sheet — continued (예상 대차대조표 계속)</h2>
+    <img src="Captures/Screenshot 2026-03-17 163135.png" alt="Exhibit 4 Projected Balance Sheet cont.">
+    <p class="img-cap">Source: Company documents.</p>
+  </div>
+</div>
+<div class="bi-row">
+  <div class="cell full">
+    <h2>Exhibit 4: Projected Cash Flow Statement (예상 현금흐름표)</h2>
+    <img src="Captures/Screenshot 2026-03-17 163151.png" alt="Exhibit 4 Projected Cash Flow">
+    <p class="img-cap">Source: Company documents.</p>
+  </div>
+</div>
+
+<div class="vocab-panel">
+  <h3>재무 예측 (Financial Projections) — 주요 용어 해설</h3>
+  <div class="vgrid">
+    <div class="vcard">
+      <div class="vt">Financial Projections <span style="font-weight:normal;font-size:11px;color:#888">/ 재무 예측</span></div>
+      <div class="vkr">미래 재무성과에 대한 추정치</div>
+      <div class="vc1"><span class="badge bg">일반</span>향후 매출·비용·이익 등을 추정한 재무 계획</div>
+      <div class="vc2"><span class="badge bv">VC</span>VC는 투자 결정 시 3~5년 재무 예측을 요구. 핵심은 가정(Assumptions)의 합리성 — 매출 성장률, Gross Margin, OpEx 비율 등. "Hockey Stick" 모양(초기 적자 후 급성장) 예측은 흔하지만, VC는 가정의 근거를 면밀히 검증.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Break-even <span style="font-weight:normal;font-size:11px;color:#888">/ 손익분기점</span></div>
+      <div class="vkr">총수입 = 총비용이 되는 시점·매출 수준</div>
+      <div class="vc1"><span class="badge bg">일반</span>이익도 손실도 발생하지 않는 경계 지점</div>
+      <div class="vc2"><span class="badge bv">VC</span>VC가 투자 결정 시 묻는 핵심 질문: "얼마나 팔아야 흑자가 되나?" Break-even Revenue가 낮을수록(즉, 빨리 달성 가능할수록) 투자 리스크 감소. Athleta의 경우 카탈로그 발행 확대로 마케팅 비용이 늘어나므로, 매출 성장률이 비용 증가율을 상회해야 함.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Revenue Growth Rate <span style="font-weight:normal;font-size:11px;color:#888">/ 매출 성장률</span></div>
+      <div class="vkr">전년 대비 매출 증가 비율 (YoY Growth)</div>
+      <div class="vc1"><span class="badge bg">일반</span>Year-over-Year (YoY) 매출 변화율</div>
+      <div class="vc2"><span class="badge bv">VC</span>초기 VC 투자의 핵심 판단 기준. 일반적으로 연 50%+ 성장을 "고성장"으로 분류. Athleta FY00~FY01 약 85% 성장은 매력적. 그러나 닷컴 버블 붕괴 이후 소매업 성장 예측의 신뢰도 자체가 낮아진 상황.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Capital Expenditure (CapEx) <span style="font-weight:normal;font-size:11px;color:#888">/ 자본적 지출</span></div>
+      <div class="vkr">장기 자산(설비·시스템 등) 취득에 사용된 지출</div>
+      <div class="vc1"><span class="badge bg">일반</span>건물·기계·IT 시스템 등 장기 자산 구매 비용</div>
+      <div class="vc2"><span class="badge bv">VC</span>Free Cash Flow = OCF − CapEx. CapEx가 클수록 FCF 감소 → 현금 소진 가속. Athleta의 MIS·물류센터 업그레이드는 CapEx 항목. VC는 CapEx가 향후 매출 성장·비용 절감으로 회수되는지(ROI) 판단.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ EXHIBIT 5 & 6 ═══════════════════════════════ -->
+<div class="section-divider">Exhibit 5 & 6</div>
+<div class="bi-row">
+  <div class="cell full">
+    <h2>Exhibit 5: Venture Capital Financing Trends (VC 파이낸싱 트렌드, 1995–2002)</h2>
+    <img src="Captures/Screenshot 2026-03-17 163157.png" alt="Exhibit 5 VC Financing Trends">
+    <p class="img-cap">Source: Adapted from Venture One; Equity Financings for Venture-Backed Companies, by Industry Group (1995–1Q 2002).</p>
+  </div>
+</div>
+
+<div class="vocab-panel">
+  <h3>Exhibit 5 — VC 시장 용어 해설</h3>
+  <div class="vgrid">
+    <div class="vcard">
+      <div class="vt">VC Financing Trends <span style="font-weight:normal;font-size:11px;color:#888">/ VC 투자 트렌드</span></div>
+      <div class="vkr">시기별 VC 투자 규모·건수 추이</div>
+      <div class="vc1"><span class="badge bg">일반</span>VC 투자 시장의 전체적인 흐름과 규모 변화</div>
+      <div class="vc2"><span class="badge bv">VC</span>차트를 보면 1999~2000년 닷컴 버블 정점(Peak) 이후 2001~2002년 급격한 하락. 2002년 1Q는 거의 바닥(Trough) 수준. 소매업 섹터 VC는 전체 시장보다 더 심각한 하락 — Athleta가 VC 조달에 어려움을 겪는 거시 배경.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Consumer Retail VC <span style="font-weight:normal;font-size:11px;color:#888">/ 소비자 소매 VC</span></div>
+      <div class="vkr">소비재·소매업 분야 전문 VC</div>
+      <div class="vc1"><span class="badge bg">일반</span>소비자 대상 상품·서비스 기업에 투자하는 VC 펀드</div>
+      <div class="vc2"><span class="badge bv">VC</span>닷컴 버블 당시 소매업 VC들은 B2C 인터넷 기업에 대규모 투자 → 대부분 손실. 2002년 현재 소비자 소매 VC들이 시장에서 이탈(Exit the market). Athleta는 VC 조달의 1차 타겟인 소비자 소매 VC를 거의 찾을 수 없는 상황.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Number of Rounds <span style="font-weight:normal;font-size:11px;color:#888">/ 투자 라운드 수</span></div>
+      <div class="vkr">특정 기간 내 이루어진 VC 투자 건수</div>
+      <div class="vc1"><span class="badge bg">일반</span>투자가 집행된 횟수 (건수)</div>
+      <div class="vc2"><span class="badge bv">VC</span>투자 라운드 수 감소는 신규 투자 의향 감소를 의미. 2002년 1Q의 급감은 VC들이 신규 투자보다 기존 포트폴리오 관리에 집중하고 있음을 시사. 창업자 입장에서 투자 유치 소요 시간(Time to Close) 증가, 협상력 약화.</div>
+    </div>
+  </div>
+</div>
+
+<div class="bi-row">
+  <div class="cell full">
+    <h2>Exhibit 6: Specialty Retailer Comparables (전문 소매업체 비교)</h2>
+    <img src="Captures/Screenshot 2026-03-17 163204.png" alt="Exhibit 6 Specialty Retailer Comparables">
+    <p class="img-cap">Source: Adapted from Merrill Lynch (Specialty Retail Scorecard, April 2002).</p>
+  </div>
+</div>
+
+<div class="vocab-panel">
+  <h3>Exhibit 6 — 밸류에이션 배수 용어 해설</h3>
+  <div class="vgrid">
+    <div class="vcard">
+      <div class="vt">Market Capitalization <span style="font-weight:normal;font-size:11px;color:#888">/ 시가총액</span></div>
+      <div class="vkr">주가 × 발행 주식 수 = 시장이 평가한 기업 가치</div>
+      <div class="vc1"><span class="badge bg">일반</span>주식 시장에서 형성된 기업의 총 가치</div>
+      <div class="vc2"><span class="badge bv">VC</span>비상장 기업 밸류에이션 시 상장 유사기업(Comparable Company)의 Market Cap 배수를 참조. Exhibit 6의 소매업체들이 Athleta의 잠재적 Exit Comparable. IPO 또는 M&A 시 예상 가치를 역산하는 데 활용.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">EPS Multiple (P/E) <span style="font-weight:normal;font-size:11px;color:#888">/ 주가수익비율</span></div>
+      <div class="vkr">주가 ÷ 주당순이익 = 이익 대비 주가 배수</div>
+      <div class="vc1"><span class="badge bg">일반</span>투자자가 $1의 이익을 위해 얼마를 지불하는지 나타내는 배수</div>
+      <div class="vc2"><span class="badge bv">VC</span>적자 기업(Athleta)에는 적용 불가. VC는 대신 Revenue Multiple(EV/Revenue) 또는 EV/Gross Profit 배수를 사용. 수익성 달성 후 예상 EPS와 업계 P/E로 Exit 가치를 추정하는 방식으로 역산 활용.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">EBITDA Multiple (EV/EBITDA) <span style="font-weight:normal;font-size:11px;color:#888">/ EBITDA 배수</span></div>
+      <div class="vkr">기업가치(EV) ÷ EBITDA</div>
+      <div class="vc1"><span class="badge bg">일반</span>이자·세금·감가상각 전 이익 대비 기업가치 배수</div>
+      <div class="vc2"><span class="badge bv">VC</span>VC 및 PE의 가장 일반적인 밸류에이션 배수. 소매업 일반 EV/EBITDA: 6~12x. Athleta가 향후 EBITDA $X를 달성하면 기업가치 = X × 업계 배수 → Exit 가치 추정. Series E 투자자는 이 계산으로 기대 수익률(IRR) 역산.</div>
+    </div>
+    <div class="vcard">
+      <div class="vt">Five-Year Sales Growth <span style="font-weight:normal;font-size:11px;color:#888">/ 5개년 매출 성장률</span></div>
+      <div class="vkr">5년간 연평균 매출 성장률 (CAGR)</div>
+      <div class="vc1"><span class="badge bg">일반</span>Compound Annual Growth Rate — 복리 기준 연평균 성장률</div>
+      <div class="vc2"><span class="badge bv">VC</span>업계 비교군(Peer Group)의 성장률 대비 Athleta의 성장 스토리 포지셔닝에 활용. 성장률이 높을수록 높은 Revenue Multiple 정당화 가능. 단, 소매업 VC 기준 "고성장"의 기준이 SaaS(100%+) 대비 낮음(20~50%).</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- .container -->
+
+<!-- ── Floating Tooltip ── -->
+<div id="tip">
+  <div class="t-title" id="tt-title">—</div>
+  <div class="t-label">일반적 의미</div>
+  <div class="t-common" id="tt-common">—</div>
+  <div class="t-label">VC 업계에서의 의미</div>
+  <div class="t-vc" id="tt-vc">—</div>
+</div>
+
+<button id="clear-btn" onclick="clearAll()">선택 해제 (Esc)</button>
+
+<script>
+const TERMS = {
+  't-series-e': {
+    title: 'Series E / 시리즈 E',
+    common: 'A→B→C→D→E 순서의 다섯 번째 우선주 투자 라운드.',
+    vc: '후기 성장 단계 자금 조달. 각 라운드마다 밸류에이션 상승, 지분 희석(Dilution) 누적. 후기 라운드일수록 Term Sheet 복잡화 — 청산 우선권 배수(Liquidation Preference Multiple), 참여 우선주(Participating Preferred) 등.'
+  },
+  't-equity': {
+    title: 'Equity Capital / 자기자본',
+    common: '주식 발행으로 조달한 자본. 상환 의무 없음.',
+    vc: 'VC 투자는 우선주(Preferred Stock)로 집행. 청산 우선권(Liquidation Preference), 반희석(Anti-dilution), 이사회 참여권(Board Seat) 등 특별 권리 수반. 창업자·임직원은 보통주(Common Stock) 보유.'
+  },
+  't-multichannel': {
+    title: 'Multi-channel / 멀티채널',
+    common: '카탈로그·온라인·오프라인 등 복수 유통 채널 운영.',
+    vc: 'LTV 극대화 전략. 채널 시너지로 CAC 효율화 (카탈로그+웹 고객은 지출 50% 증가). 리스크 분산 효과. 단, 채널 갈등(Cannibalization)·재고 관리 복잡성 증가 리스크 존재.'
+  },
+  't-circulation': {
+    title: 'Catalog Circulation / 카탈로그 발행 부수',
+    common: '카탈로그 인쇄·배포 총 부수.',
+    vc: 'CAC의 핵심 결정 요인. ROI = Response Rate × AOV ÷ 카탈로그 단가. Athleta 응답률 6.4% vs 업계 평균 2% → 발행 부수 확대 시 기대 ROI 높음.'
+  },
+  't-working-capital': {
+    title: 'Supplier Terms / 공급업체 결제 조건',
+    common: 'Net 30 = 납품 후 30일 내 지급. 선급(Prepayment) = 납품 전 지급.',
+    vc: '선급 조건은 Working Capital 잠식 → Cash Conversion Cycle 악화. Net 30~60 조건 협상 시 현금 효율 개선. VC는 공급망 협상력을 비즈니스 성숙도 지표로 평가.'
+  },
+  't-private-label': {
+    title: 'Private-Label Brand / 자체 브랜드',
+    common: '소매업체가 직접 기획·제조하는 PB 상품 (OEM/ODM).',
+    vc: '외부 브랜드 의존도 축소 → 공급망 협상력 강화 → Gross Margin 개선 (+5~15%p). 브랜드 자산(Brand Equity) 구축. VC는 자체 브랜드 매출 비중을 마진 개선 레버(Margin Lever)로 평가.'
+  },
+  't-distribution': {
+    title: 'Distribution Center / 물류센터',
+    common: '상품 보관·포장·배송을 처리하는 시설.',
+    vc: '운영 레버리지(Operating Leverage)의 핵심 인프라. 고정비 성격 강함 → 매출 증가 시 단위 비용 감소. CapEx 선투자는 향후 3~5년 성장 용량(Capacity) 확보 의미.'
+  }
+};
+
+// Sentence hover + click
+document.querySelectorAll('.sent').forEach(el => {
+  const sid = el.dataset.sid;
+  el.addEventListener('mouseenter', () => {
+    document.querySelectorAll(`.sent[data-sid="${sid}"]`).forEach(s => s.classList.add('h-on'));
+  });
+  el.addEventListener('mouseleave', () => {
+    document.querySelectorAll(`.sent[data-sid="${sid}"]`).forEach(s => s.classList.remove('h-on'));
+  });
+  el.addEventListener('click', e => {
+    e.stopPropagation();
+    const all = document.querySelectorAll(`.sent[data-sid="${sid}"]`);
+    const was = el.classList.contains('on');
+    all.forEach(s => s.classList.toggle('on', !was));
+  });
+});
+
+// Term hover + tooltip + click
+const tip = document.getElementById('tip');
+document.querySelectorAll('.term').forEach(el => {
+  const tid = el.dataset.tid;
+  el.addEventListener('mouseenter', e => {
+    document.querySelectorAll(`.term[data-tid="${tid}"]`).forEach(t => t.classList.add('h-on'));
+    if (TERMS[tid]) {
+      document.getElementById('tt-title').textContent = TERMS[tid].title;
+      document.getElementById('tt-common').textContent = TERMS[tid].common;
+      document.getElementById('tt-vc').textContent = TERMS[tid].vc;
+      tip.style.display = 'block';
+      moveTip(e);
+    }
+  });
+  el.addEventListener('mousemove', moveTip);
+  el.addEventListener('mouseleave', () => {
+    document.querySelectorAll(`.term[data-tid="${tid}"]`).forEach(t => t.classList.remove('h-on'));
+    tip.style.display = 'none';
+  });
+  el.addEventListener('click', e => {
+    e.stopPropagation();
+    const all = document.querySelectorAll(`.term[data-tid="${tid}"]`);
+    const was = el.classList.contains('on');
+    all.forEach(t => t.classList.toggle('on', !was));
+  });
+});
+
+function moveTip(e) {
+  const tw = tip.offsetWidth || 340, th = tip.offsetHeight || 140;
+  const left = e.clientX + 18 + tw > window.innerWidth ? e.clientX - tw - 8 : e.clientX + 18;
+  const top  = e.clientY + 18 + th > window.innerHeight ? e.clientY - th - 8 : e.clientY + 18;
+  tip.style.left = left + 'px';
+  tip.style.top  = top  + 'px';
+}
+
+function clearAll() {
+  document.querySelectorAll('.on').forEach(el => el.classList.remove('on'));
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') clearAll(); });
+document.addEventListener('click', clearAll);
+</script>
+</body>
+</html>
