@@ -605,14 +605,14 @@ function showHub() {
   document.getElementById('login-btn').addEventListener('click', tryLogin);
   document.getElementById('logout-btn').addEventListener('click', logout);
 
-  if (sessionStorage.getItem(AUTH_KEY) === '1') showHub();
+  if (sessionStorage.getItem(AUTH_KEY) === AUTH_VAL) showHub();
 })();
 
 function tryLogin() {
   const v = document.getElementById('pw-input').value;
   const err = document.getElementById('pw-error');
   if (v === AUTH_VAL) {
-    sessionStorage.setItem(AUTH_KEY, '1');
+    sessionStorage.setItem(AUTH_KEY, AUTH_VAL);
     err.textContent = '';
     err.classList.remove('visible');
     showHub();
