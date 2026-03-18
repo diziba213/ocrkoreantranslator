@@ -70,6 +70,8 @@ OLLAMA_ORIGINS=* ollama serve
 22. Case02_Athleta/
 ├── README.md                       ← 이 파일
 ├── CLAUDE.md                       ← Claude Code 지시문
+├── index.html                      ← 메인 허브 (로그인 + 케이스 목록)
+├── coming_soon.html                ← 미완성 케이스 플레이스홀더
 ├── server.py                       ← 로컬 Ollama 프록시 서버
 ├── Athleta_bilingual_v3.html       ← 메인 뷰어 (영한 대조 + AI 설명)
 ├── terms.json                      ← VC/경영 용어 사전 (~80개)
@@ -83,6 +85,55 @@ OLLAMA_ORIGINS=* ollama serve
 │   └── 2026-03-18.md               ← 개발 일지
 └── .claude/                        ← Claude Code 세션 데이터
 ```
+
+## Feedback 수집 설정 (Google Apps Script)
+
+`index.html`의 피드백 모달은 Google Sheets로 제출 내용을 수집할 수 있다.
+설정하지 않으면 자동으로 `mailto:` 폴백으로 전환된다.
+
+### 1단계 — Google Sheets 생성
+
+1. [Google Sheets](https://sheets.google.com) 에서 새 스프레드시트 생성
+2. 첫 행에 헤더 입력: `timestamp | type | name | message`
+
+### 2단계 — Apps Script 연결
+
+1. 스프레드시트 메뉴: **Extensions > Apps Script**
+2. 기존 코드 전체 삭제 후 아래 코드 붙여넣기:
+
+```javascript
+function doPost(e) {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  let data = {};
+  try { data = JSON.parse(e.postData.contents); } catch(err) {}
+  sheet.appendRow([
+    new Date().toISOString(),
+    data.type || '',
+    data.name || '',
+    data.message || ''
+  ]);
+  return ContentService.createTextOutput('ok');
+}
+```
+
+3. **Deploy > New deployment** 클릭
+4. Type: **Web app** 선택
+5. Execute as: **Me**, Who has access: **Anyone** 설정
+6. **Deploy** → 생성된 Web App URL 복사
+
+### 3단계 — index.html에 URL 등록
+
+`index.html`에서 아래 줄을 찾아 URL 교체:
+
+```javascript
+const FEEDBACK_ENDPOINT = 'YOUR_APPS_SCRIPT_URL_HERE';
+// 변경 후:
+const FEEDBACK_ENDPOINT = 'https://script.google.com/macros/s/YOUR_ID/exec';
+```
+
+이후 `git add index.html && git commit -m "feat: add feedback endpoint" && git push`
+
+---
 
 ## Tech Stack
 

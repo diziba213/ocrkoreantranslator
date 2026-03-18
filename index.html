@@ -273,6 +273,73 @@ body::before {
 @keyframes fade-out { to { opacity: 0; transform: scale(.98); } }
 .fade-in  { animation: fade-in .35s cubic-bezier(.16,1,.3,1) both; }
 @keyframes fade-in  { from { opacity: 0; transform: translateY(12px); } }
+
+/* ── Feedback button ── */
+.fb-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 600; color: var(--muted);
+  background: none; border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 12px; cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.fb-btn:hover { color: var(--text); border-color: var(--blue); background: rgba(88,166,255,.06); }
+.fb-btn::before { content: '✦'; font-size: 9px; }
+
+/* ── Feedback modal overlay ── */
+#fb-overlay {
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(1,4,9,.75); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px; opacity: 0; pointer-events: none;
+  transition: opacity .2s;
+}
+#fb-overlay.open { opacity: 1; pointer-events: all; }
+
+#fb-modal {
+  width: 100%; max-width: 480px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 32px 28px 24px;
+  box-shadow: 0 32px 100px rgba(0,0,0,.7);
+  transform: translateY(16px) scale(.98);
+  transition: transform .25s cubic-bezier(.16,1,.3,1);
+}
+#fb-overlay.open #fb-modal { transform: none; }
+
+.fb-modal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
+.fb-modal-header h2 { font-size: 16px; font-weight: 700; color: var(--text); }
+.fb-modal-header p  { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.fb-close { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; line-height: 1; padding: 0 2px; }
+.fb-close:hover { color: var(--text); }
+
+.fb-field { margin-bottom: 14px; }
+.fb-field label { display: block; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+.fb-field input, .fb-field select, .fb-field textarea {
+  width: 100%; padding: 9px 13px;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 7px; color: var(--text); font-size: 13px;
+  font-family: inherit; outline: none; resize: vertical;
+  transition: border-color .15s, box-shadow .15s;
+}
+.fb-field input:focus, .fb-field select:focus, .fb-field textarea:focus {
+  border-color: var(--blue); box-shadow: 0 0 0 3px rgba(88,166,255,.12);
+}
+.fb-field select option { background: #1c2128; }
+.fb-field textarea { min-height: 90px; }
+
+.fb-submit {
+  width: 100%; padding: 11px;
+  background: linear-gradient(135deg, #1f6feb, #388bfd);
+  border: none; border-radius: 7px; color: #fff;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  margin-top: 4px; transition: opacity .15s, box-shadow .15s;
+  box-shadow: 0 4px 14px rgba(31,111,235,.3);
+}
+.fb-submit:hover { opacity: .92; }
+.fb-submit:disabled { opacity: .5; cursor: default; }
+
+.fb-status { font-size: 12px; text-align: center; margin-top: 10px; min-height: 18px; }
+.fb-status.ok  { color: var(--green); }
+.fb-status.err { color: var(--red); }
 </style>
 </head>
 <body>
@@ -296,12 +363,12 @@ body::before {
     <div class="login-footer">
       <div class="login-footer-inner">
         <div class="login-author">
-          <strong>Hyundong Lee</strong>
+          <strong>Gyehyu K</strong>
           KAIST IMMS &mdash; BIZ.60010
         </div>
         <div class="login-feedback">
           개선 아이디어 / 불편한 점
-          <a href="mailto:diziba213@gmail.com?subject=Case Hub Feedback">diziba213@gmail.com</a>
+          <button class="fb-btn" onclick="openFeedback()" style="margin-top:6px;">피드백 보내기</button>
         </div>
       </div>
     </div>
@@ -316,6 +383,7 @@ body::before {
     <div class="hub-logo">VC Case Hub</div>
     <div class="hub-course">
       <span>KAIST BIZ.60010 &bull; Spring 2026</span>
+      <button class="fb-btn" onclick="openFeedback()">피드백</button>
       <button class="hub-logout" id="logout-btn" title="로그아웃 (세션 종료)">로그아웃</button>
     </div>
   </header>
@@ -336,16 +404,58 @@ body::before {
         Copyright &copy; Harvard Business School Publishing. 교육 목적 Fair Use 사용. 상업적 이용 및 재배포 금지.
       </div>
       <div class="hub-footer-right">
-        Hyundong Lee &bull; KAIST IMMS<br>
+        Gyehyu K &bull; KAIST IMMS<br>
         개선 제안: <a href="mailto:diziba213@gmail.com?subject=Case Hub Feedback">diziba213@gmail.com</a>
       </div>
     </div>
   </footer>
 </div>
 
+<!-- ═══════════════════════════
+     FEEDBACK MODAL
+═══════════════════════════ -->
+<div id="fb-overlay" onclick="if(event.target===this)closeFeedback()">
+  <div id="fb-modal">
+    <div class="fb-modal-header">
+      <div>
+        <h2>피드백 보내기</h2>
+        <p>개선 아이디어, 오류 제보, 불편한 점을 남겨주세요.</p>
+      </div>
+      <button class="fb-close" onclick="closeFeedback()">&#x2715;</button>
+    </div>
+
+    <div class="fb-field">
+      <label>유형 (Type)</label>
+      <select id="fb-type">
+        <option value="개선 아이디어">개선 아이디어 (Improvement)</option>
+        <option value="번역 오류">번역 오류 (Translation Error)</option>
+        <option value="기능 오류">기능 오류 (Bug)</option>
+        <option value="콘텐츠 요청">콘텐츠 요청 (Content Request)</option>
+        <option value="기타">기타 (Other)</option>
+      </select>
+    </div>
+    <div class="fb-field">
+      <label>이름 / 연락처 (선택)</label>
+      <input type="text" id="fb-name" placeholder="익명 가능">
+    </div>
+    <div class="fb-field">
+      <label>내용 *</label>
+      <textarea id="fb-message" placeholder="자유롭게 작성해 주세요."></textarea>
+    </div>
+
+    <button class="fb-submit" id="fb-submit-btn" onclick="submitFeedback()">제출하기</button>
+    <div class="fb-status" id="fb-status"></div>
+  </div>
+</div>
+
 <script>
 const AUTH_KEY = 'athleta-auth';
 const AUTH_VAL = 'kaist2026';
+
+// ── Feedback endpoint ─────────────────────────────────────
+// Google Apps Script Web App URL을 여기에 입력하세요.
+// 설정 방법: README.md 참조
+const FEEDBACK_ENDPOINT = 'YOUR_APPS_SCRIPT_URL_HERE';
 
 // ── Case data ─────────────────────────────────────────────
 const CASES = [
@@ -522,6 +632,81 @@ function tryLogin() {
 function logout() {
   sessionStorage.removeItem(AUTH_KEY);
   location.reload();
+}
+
+// ── Feedback modal ────────────────────────────────────────
+function openFeedback() {
+  document.getElementById('fb-overlay').classList.add('open');
+  document.getElementById('fb-status').textContent = '';
+  document.getElementById('fb-status').className = 'fb-status';
+  document.getElementById('fb-submit-btn').disabled = false;
+  document.getElementById('fb-message').focus();
+}
+
+function closeFeedback() {
+  document.getElementById('fb-overlay').classList.remove('open');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeFeedback();
+});
+
+async function submitFeedback() {
+  const type    = document.getElementById('fb-type').value;
+  const name    = document.getElementById('fb-name').value.trim() || '익명';
+  const message = document.getElementById('fb-message').value.trim();
+  const status  = document.getElementById('fb-status');
+  const btn     = document.getElementById('fb-submit-btn');
+
+  if (!message) {
+    status.textContent = '내용을 입력해 주세요.';
+    status.className = 'fb-status err';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '제출 중...';
+  status.textContent = '';
+
+  const payload = {
+    timestamp: new Date().toISOString(),
+    type, name, message,
+    page: location.href,
+  };
+
+  // Google Apps Script endpoint가 설정되지 않은 경우 mailto 폴백
+  if (!FEEDBACK_ENDPOINT || FEEDBACK_ENDPOINT === 'YOUR_APPS_SCRIPT_URL_HERE') {
+    const subject = encodeURIComponent('[Case Hub] ' + type);
+    const body = encodeURIComponent(
+      '유형: ' + type + '\n이름: ' + name + '\n\n' + message
+    );
+    window.open('mailto:diziba213@gmail.com?subject=' + subject + '&body=' + body);
+    status.textContent = '메일 앱이 열렸습니다. 전송 후 창을 닫아주세요.';
+    status.className = 'fb-status ok';
+    btn.disabled = false;
+    btn.textContent = '제출하기';
+    return;
+  }
+
+  try {
+    await fetch(FEEDBACK_ENDPOINT, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    status.textContent = '제출 완료! 소중한 의견 감사합니다.';
+    status.className = 'fb-status ok';
+    document.getElementById('fb-message').value = '';
+    document.getElementById('fb-name').value = '';
+    setTimeout(closeFeedback, 2000);
+  } catch (err) {
+    status.textContent = '오류가 발생했습니다. 이메일로 보내주세요: diziba213@gmail.com';
+    status.className = 'fb-status err';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '제출하기';
+  }
 }
 </script>
 </body>
