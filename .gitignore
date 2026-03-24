@@ -10,3 +10,15 @@ desktop.ini
 *.swp
 *.swo
 *~
+
+# Source markdown (kept in Google Drive, not needed on Pages)
+*_EN.md
+*_KR.md
+
+# Personal files
+*_Memo*.md
+*_Memo*.pdf
+*_Memo*.html
+*_Draft*.md
+*_LectureNote*.md
+*.pdf

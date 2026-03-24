@@ -121,7 +121,7 @@ header .sub { font-size: 11px; color: #999; }
 
 /* ── Ask AI button ── */
 #ask-btn {
-  position: fixed; right: 28px; bottom: 28px; z-index: 700;
+  position: fixed; right: 28px; bottom: 52px; z-index: 700;
   display: none; align-items: center; gap: 7px;
   background: #1a5fa8; color: #fff; border: none; border-radius: 20px;
   padding: 9px 18px; font-size: 13px; cursor: pointer;
@@ -217,7 +217,7 @@ header .sub { font-size: 11px; color: #999; }
 <header>
   <h1>Athleta — HBS 9-803-045</h1>
   <span class="sub">Sahlman &amp; Friedman-Harris | Rev. July 30, 2003 &nbsp;|&nbsp; 영한 대조 + AI 용어 설명</span>
-  <a class="back-btn" href="index.html">&#8592; Hub</a>
+  <a class="back-btn" href="../index.html">&#8592; Hub</a>
 </header>
 
 <div class="help-bar">
@@ -1117,6 +1117,19 @@ function scrollChat() {
   m.scrollTop = m.scrollHeight;
 }
 
+function mdToHtml(t) {
+  return t
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    .replace(/^### (.+)$/gm, '<strong>$1</strong>')
+    .replace(/^## (.+)$/gm, '<strong>$1</strong>')
+    .replace(/^# (.+)$/gm, '<strong>$1</strong>')
+    .replace(/^\s*[-*]\s+(.+)$/gm, '• $1')
+    .replace(/\n/g, '<br>');
+}
+
 async function sendChat() {
   const input = document.getElementById('chat-input');
   const sendBtn = document.getElementById('chat-send');
@@ -1164,7 +1177,7 @@ async function sendChat() {
       dec.decode(value).split('\n').filter(Boolean).forEach(line => {
         try {
           const j = JSON.parse(line);
-          if (j.message?.content) { buf += j.message.content; typingEl.textContent = buf; scrollChat(); }
+          if (j.message?.content) { buf += j.message.content; typingEl.innerHTML = mdToHtml(buf); scrollChat(); }
         } catch (_) {}
       });
     }
